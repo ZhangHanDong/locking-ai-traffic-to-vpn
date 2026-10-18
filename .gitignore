@@ -1,0 +1,8 @@
+# Machine-specific — never commit (contains your pubkey/endpoint choices)
+scripts/vars.conf
+
+# Rollback backups produced by the scripts
+*.bak
+*.bak-*
+
+.DS_Store

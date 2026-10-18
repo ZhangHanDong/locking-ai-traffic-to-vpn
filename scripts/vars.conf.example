@@ -1,0 +1,25 @@
+# Copy to vars.conf and fill in. All scripts source this file.
+
+# WireGuard config managed by wg-quick, and its interface name after "up"
+WG_CONF="$HOME/wg0.conf"
+IFACE="utun8"
+
+# Peer public key from the [Peer] section of WG_CONF
+PEER_PUBKEY="REPLACE_ME"
+
+# Tunnel DNS (must be reachable only via the tunnel; appears in AllowedIPs)
+TUNNEL_DNS="10.100.0.1"
+
+# Static dedicated ranges (Anthropic). Add more CIDRs space-separated.
+STATIC_CIDRS="160.79.104.0/21 2607:6bc0::/48"
+
+# Anycast-domain services (OpenAI et al): pinned as /32, kept fresh by the sync daemon.
+DOMAINS="api.anthropic.com claude.ai platform.claude.com api.openai.com chatgpt.com auth.openai.com auth0.openai.com platform.openai.com cdn.openai.com files.openai.com chat.com ab.chatgpt.com"
+
+# Sync daemon interval (seconds). Hourly shrinks the anycast-rotation window; 60 = tightest.
+SYNC_INTERVAL=3600
+
+# --- Optional: endpoint watchdog (commercial relays that rotate entry IPs) ---
+# Set to the Endpoint host/IP from WG_CONF. Script re-resolves it and wg-sets when stale.
+ENDPOINT_HOST=""
+ENDPOINT_PORT=""
