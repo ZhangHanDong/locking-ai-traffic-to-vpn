@@ -14,7 +14,12 @@ TUNNEL_DNS="10.100.0.1"
 STATIC_CIDRS="160.79.104.0/21 2607:6bc0::/48"
 
 # Anycast-domain services (OpenAI et al): pinned as /32, kept fresh by the sync daemon.
-DOMAINS="api.anthropic.com claude.ai platform.claude.com api.openai.com chatgpt.com auth.openai.com auth0.openai.com platform.openai.com cdn.openai.com files.openai.com chat.com ab.chatgpt.com"
+# The OpenAI list is the full host surface extracted from
+# ChatGPT.app/Contents/Resources/app.asar — pin EVERY subdomain; apex != subdomain
+# on Cloudflare (chatgpt.site != assets.chatgpt.site). codex-cloud-*.chatgpt.com =
+# agent "dot" cloud backends; realtime.* = voice; *.oaiusercontent.com = files/agent
+# sandbox; chatgpt.site/chatgpt-team.site are in the app's scoped-UA host list.
+DOMAINS="api.anthropic.com claude.ai platform.claude.com api.openai.com chatgpt.com www.chatgpt.com api.chatgpt.com realtime.chatgpt.com codex-cloud-backend.chatgpt.com codex-cloud-environments.chatgpt.com learn.chatgpt.com m.chatgpt.com gov.chatgpt.com ab.chatgpt.com ws.chatgpt.com auth.openai.com auth0.openai.com platform.openai.com admin.openai.com cdn.openai.com files.openai.com images.openai.com bzrcdn.openai.com statsigcdn.openai.com multiplayer-u0.api.openai.com pay.openai.com developers.openai.com help.openai.com model-spec.openai.com status.openai.com ads.openai.com connect.ads.openai.com chat.openai.com ios.chat.openai.com apps.openai.com oaistatic.com auth-cdn.oaistatic.com cdn.oaistatic.com persistent.oaistatic.com updates.oaistatic.com files.oaiusercontent.com web-sandbox.oaiusercontent.com chat.com chatgpt.site assets.chatgpt.site chatgpt-team.site"
 
 # Sync daemon interval (seconds). Hourly shrinks the anycast-rotation window; 60 = tightest.
 SYNC_INTERVAL=3600

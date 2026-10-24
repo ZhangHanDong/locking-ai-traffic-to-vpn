@@ -24,12 +24,24 @@ done
 IPS=$(echo "$IPS" | tr ' ' '\n' | grep -E '^[0-9]' | sort -u)
 if [ -z "$IPS" ]; then echo "$LOG resolution failed — keeping existing table (fail-closed)"; exit 0; fi
 
+# --- AAAA: pf block-only. On v4-only tunnels v6 pins can't be routed; putting them in
+# the table fails CLOSED on v6-capable networks instead of leaking direct when an app
+# prefers an AAAA answer. Never enters wg allowed-ips or the route table.
+V6=""
+for d in $DOMAINS; do
+  r=$(dig +short +time=3 +tries=1 AAAA "$d" "@$TUNNEL_DNS" 2>/dev/null | grep -E ':' | grep -v '%' | sort -u)
+  [ -z "$r" ] && r=$(dig +short +time=3 +tries=1 AAAA "$d" 2>/dev/null | grep -E ':' | grep -v '%' | sort -u)
+  V6="$V6 $r"
+done
+V6=$(echo "$V6" | tr ' ' '\n' | grep -E ':' | sort -u)
+
 # --- pf table (replace; kill states of removed IPs — pf blocks don't kill existing flows) ---
 OLD=$(pfctl -a ai.lock -t locked -T show 2>/dev/null | tr -d ' ' | grep -E '^[0-9]')
-NEWLIST="$(echo "$STATIC_CIDRS" | tr '\n' ' ') $IPS"
+NEWLIST="$(echo "$STATIC_CIDRS" | tr '\n' ' ') $IPS $V6"
 pfctl -a ai.lock -t locked -T replace $NEWLIST 2>/dev/null
 for ip in $OLD; do
-  echo "$NEWLIST" | tr ' ' '\n' | grep -qx "$ip" || { pfctl -k "$ip" >/dev/null 2>&1; route delete -inet "$ip" 2>/dev/null; }
+  case "$ip" in */*|*:*) continue ;; esac   # CIDRs and v6 addrs carry no per-IP route
+  echo "$NEWLIST" | tr ' ' '\n' | grep -qx "$ip" || { pfctl -k "$ip" >/dev/null 2>&1; route delete -inet "$ip/32" 2>/dev/null; }
 done
 
 # --- wg allowed-ips (full replacement, includes static CIDRs + tunnel DNS) ---
